@@ -242,30 +242,44 @@
             </button>
           </div>
 
-          <!-- Format Config (Digits, Separator, etc.) -->
-          <div class="flex items-center gap-3 text-xs bg-discord-dark px-3 py-1.5 rounded-xl border border-discord-card">
-            <div class="flex items-center gap-2">
-              <span class="text-discord-muted font-medium">Формат:</span>
-              <select id="cfg-digits" onchange="app.onConfigChange()" class="bg-discord-secondary border border-discord-card rounded px-2 py-0.5 text-white font-mono focus:outline-none">
-                <option value="4" selected>0001_ (4 цифры)</option>
-                <option value="3">001_ (3 цифры)</option>
-                <option value="2">01_ (2 цифры)</option>
-                <option value="5">00001_ (5 цифр)</option>
-              </select>
+          <!-- Format Config & View Mode Toggle -->
+          <div class="flex flex-wrap items-center gap-2.5">
+            <div class="flex items-center gap-3 text-xs bg-discord-dark px-3 py-1.5 rounded-xl border border-discord-card">
+              <div class="flex items-center gap-2">
+                <span class="text-discord-muted font-medium">Формат:</span>
+                <select id="cfg-digits" onchange="app.onConfigChange()" class="bg-discord-secondary border border-discord-card rounded px-2 py-0.5 text-white font-mono focus:outline-none">
+                  <option value="4" selected>0001_ (4 цифры)</option>
+                  <option value="3">001_ (3 цифры)</option>
+                  <option value="2">01_ (2 цифры)</option>
+                  <option value="5">00001_ (5 цифр)</option>
+                </select>
+              </div>
+              
+              <label class="flex items-center gap-1.5 cursor-pointer text-discord-muted hover:text-white select-none">
+                <input type="checkbox" id="cfg-strip" checked onchange="app.onConfigChange()" class="rounded bg-discord-secondary border-discord-card text-discord-blurple focus:ring-0">
+                <span>Очищать префикс</span>
+              </label>
             </div>
-            
-            <label class="flex items-center gap-1.5 cursor-pointer text-discord-muted hover:text-white select-none">
-              <input type="checkbox" id="cfg-strip" checked onchange="app.onConfigChange()" class="rounded bg-discord-secondary border-discord-card text-discord-blurple focus:ring-0">
-              <span>Очищать старый индекс</span>
-            </label>
+
+            <!-- View Mode (List vs Grid) -->
+            <div class="flex items-center gap-1 bg-discord-dark p-1 rounded-xl border border-discord-card text-xs">
+              <button id="view-mode-list" onclick="app.setViewMode('list')" class="px-2.5 py-1 rounded-lg bg-discord-blurple text-white font-medium flex items-center gap-1 transition" title="Компактный список">
+                <i data-lucide="list" class="w-3.5 h-3.5"></i>
+                <span class="hidden sm:inline">Список</span>
+              </button>
+              <button id="view-mode-grid" onclick="app.setViewMode('grid')" class="px-2.5 py-1 rounded-lg text-discord-muted hover:text-white font-medium flex items-center gap-1 transition" title="Сетка">
+                <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+                <span class="hidden sm:inline">Сетка</span>
+              </button>
+            </div>
           </div>
 
         </div>
 
       </div>
 
-      <!-- Emoji Grid -->
-      <div id="emoji-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 min-h-[200px]">
+      <!-- Emoji Container -->
+      <div id="emoji-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 min-h-[200px]">
         <!-- Emoji cards injected via JS -->
       </div>
 

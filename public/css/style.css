@@ -21,32 +21,39 @@
 
 /* SortableJS drag & drop visual feedback */
 .sortable-ghost {
-  opacity: 0.35;
-  transform: scale(0.96);
+  opacity: 0.25;
+  transform: scale(0.98);
   border: 2px dashed #5865F2 !important;
-  background-color: rgba(88, 101, 242, 0.1) !important;
+  background-color: rgba(88, 101, 242, 0.08) !important;
 }
 
 .sortable-chosen {
   cursor: grabbing !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.6);
+  background-color: #35373c !important;
   border-color: #5865F2 !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
 }
 
 .sortable-drag {
   opacity: 0.95;
-  transform: scale(1.05);
+  transform: scale(1.02);
+  z-index: 9999 !important;
 }
 
-/* Emoji card styling */
+/* Minimalist Emoji card styling */
 .emoji-card {
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  transition: transform 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
   user-select: none;
+  cursor: grab;
 }
 
 .emoji-card:hover {
-  border-color: rgba(88, 101, 242, 0.4);
-  transform: translateY(-2px);
+  border-color: rgba(88, 101, 242, 0.45);
+  background-color: #313338;
+}
+
+.emoji-card:active {
+  cursor: grabbing;
 }
 
 .drag-handle {

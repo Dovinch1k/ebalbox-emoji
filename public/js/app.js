@@ -55,6 +55,7 @@ const app = {
   emojis: [],           // Working ordered list of emojis
   originalEmojis: [],   // Pristine copy from Discord
   activeTab: 'all',     // 'all' | 'static' | 'animated'
+  viewMode: 'list',     // 'list' | 'grid'
   searchQuery: '',
   sortableInstance: null,
   progressUnsub: null,
@@ -318,6 +319,26 @@ const app = {
     });
   },
 
+  setViewMode(mode) {
+    this.viewMode = mode;
+    const container = document.getElementById('emoji-container');
+    const btnList = document.getElementById('view-mode-list');
+    const btnGrid = document.getElementById('view-mode-grid');
+
+    if (mode === 'list') {
+      container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 min-h-[200px]';
+      btnList.className = 'px-2.5 py-1 rounded-lg bg-discord-blurple text-white font-medium flex items-center gap-1 transition';
+      btnGrid.className = 'px-2.5 py-1 rounded-lg text-discord-muted hover:text-white font-medium flex items-center gap-1 transition';
+    } else {
+      container.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2.5 min-h-[200px]';
+      btnGrid.className = 'px-2.5 py-1 rounded-lg bg-discord-blurple text-white font-medium flex items-center gap-1 transition';
+      btnList.className = 'px-2.5 py-1 rounded-lg text-discord-muted hover:text-white font-medium flex items-center gap-1 transition';
+    }
+
+    this.renderEmojiGrid();
+    this.initSortable();
+  },
+
   renderEmojiGrid() {
     const container = document.getElementById('emoji-container');
     const emptyEl = document.getElementById('emoji-empty');
@@ -331,40 +352,57 @@ const app = {
 
     emptyEl.classList.add('hidden');
 
-    container.innerHTML = filtered.map((emoji) => {
-      const overallIndex = this.emojis.findIndex(e => e.id === emoji.id) + 1;
-      const previewName = clientFormatEmojiName(emoji.name, overallIndex, this.config);
+    if (this.viewMode === 'list') {
+      // Minimalist List Layout
+      container.innerHTML = filtered.map((emoji) => {
+        const overallIndex = this.emojis.findIndex(e => e.id === emoji.id) + 1;
+        const previewName = clientFormatEmojiName(emoji.name, overallIndex, this.config);
 
-      return `
-        <div data-id="${emoji.id}" class="emoji-card bg-discord-secondary/70 border border-discord-card rounded-2xl p-3 flex flex-col items-center justify-between text-center relative group">
-          
-          <!-- Top info bar with drag handle and tag -->
-          <div class="w-full flex items-center justify-between mb-2">
-            <span class="index-badge text-[11px] font-mono font-bold px-1.5 py-0.5 rounded bg-discord-dark text-discord-muted border border-discord-card">#${overallIndex}</span>
-            <div class="flex items-center gap-1">
-              ${emoji.animated ? '<span class="text-[9px] font-bold px-1 py-0.5 rounded bg-amber-500/20 text-amber-400">GIF</span>' : ''}
-              <button class="drag-handle text-discord-muted hover:text-white p-1 rounded transition opacity-50 group-hover:opacity-100 cursor-grab active:cursor-grabbing" title="Перетащите для сортировки">
-                <i data-lucide="grip-vertical" class="w-4 h-4"></i>
-              </button>
+        return `
+          <div data-id="${emoji.id}" class="emoji-card select-none bg-discord-secondary/70 hover:bg-discord-card border border-discord-card/80 hover:border-discord-blurple/50 rounded-xl px-3 py-2 flex items-center justify-between gap-2.5 transition group">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <i data-lucide="grip-vertical" class="drag-handle w-4 h-4 text-discord-muted/40 group-hover:text-discord-muted flex-shrink-0"></i>
+              <span class="index-badge text-[11px] font-mono font-bold text-discord-muted bg-discord-dark px-1.5 py-0.5 rounded border border-discord-card flex-shrink-0">#${overallIndex}</span>
+              <img src="${emoji.url}" alt="${emoji.name}" class="w-7 h-7 object-contain flex-shrink-0 drop-shadow">
+              <div class="flex items-center gap-1.5 min-w-0 text-xs font-mono">
+                <span class="text-discord-muted/80 truncate max-w-[85px] sm:max-w-[120px]" title="Текущее: :${emoji.name}:">:${emoji.name}:</span>
+                <span class="text-discord-blurple/70 flex-shrink-0 text-[10px]">➔</span>
+                <span class="new-name font-bold text-emerald-400 truncate" title="Новое: :${previewName}:">:${previewName}:</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 flex-shrink-0">
+              ${emoji.animated ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">GIF</span>' : ''}
             </div>
           </div>
+        `;
+      }).join('');
+    } else {
+      // Compact Grid Layout
+      container.innerHTML = filtered.map((emoji) => {
+        const overallIndex = this.emojis.findIndex(e => e.id === emoji.id) + 1;
+        const previewName = clientFormatEmojiName(emoji.name, overallIndex, this.config);
 
-          <!-- Emoji preview image -->
-          <div class="w-16 h-16 flex items-center justify-center p-1 bg-discord-dark/50 rounded-xl mb-2.5">
-            <img src="${emoji.url}" alt="${emoji.name}" class="max-w-full max-h-full object-contain filter drop-shadow">
-          </div>
-
-          <!-- Name & Preview -->
-          <div class="w-full space-y-1">
-            <p class="text-[11px] text-discord-muted truncate" title="Текущее: :${emoji.name}:">:${emoji.name}:</p>
-            <div class="preview-name-badge bg-discord-dark px-1.5 py-1 rounded-lg border border-discord-card">
-              <span class="new-name text-xs font-mono font-bold text-emerald-400 block truncate" title="Новое: :${previewName}:">:${previewName}:</span>
+        return `
+          <div data-id="${emoji.id}" class="emoji-card select-none bg-discord-secondary/70 border border-discord-card rounded-2xl p-2.5 flex flex-col items-center justify-between text-center relative group">
+            <div class="w-full flex items-center justify-between mb-1.5">
+              <span class="index-badge text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-discord-dark text-discord-muted border border-discord-card">#${overallIndex}</span>
+              <div class="flex items-center gap-1">
+                ${emoji.animated ? '<span class="text-[9px] font-bold px-1 py-0.5 rounded bg-amber-500/20 text-amber-400">GIF</span>' : ''}
+              </div>
+            </div>
+            <div class="w-12 h-12 flex items-center justify-center p-1 bg-discord-dark/50 rounded-xl mb-1.5">
+              <img src="${emoji.url}" alt="${emoji.name}" class="max-w-full max-h-full object-contain filter drop-shadow">
+            </div>
+            <div class="w-full space-y-0.5">
+              <p class="text-[10px] text-discord-muted truncate" title="Текущее: :${emoji.name}:">:${emoji.name}:</p>
+              <div class="preview-name-badge bg-discord-dark px-1 py-0.5 rounded border border-discord-card">
+                <span class="new-name text-[11px] font-mono font-bold text-emerald-400 block truncate" title="Новое: :${previewName}:">:${previewName}:</span>
+              </div>
             </div>
           </div>
-
-        </div>
-      `;
-    }).join('');
+        `;
+      }).join('');
+    }
 
     lucide.createIcons();
   },
@@ -393,17 +431,72 @@ const app = {
 
   initSortable() {
     const container = document.getElementById('emoji-container');
+    if (!container) return;
+
     if (this.sortableInstance) {
       this.sortableInstance.destroy();
+      this.sortableInstance = null;
     }
 
+    // Auto-scroll acceleration variables
+    let isDragging = false;
+    let mouseClientY = null;
+    let autoScrollRaf = null;
+
+    const doAutoScroll = () => {
+      if (!isDragging) return;
+      if (mouseClientY !== null) {
+        const threshold = 160; // 160px from top or bottom of viewport
+        const h = window.innerHeight;
+
+        if (mouseClientY < threshold) {
+          // Dragging towards top -> scroll up
+          const factor = Math.max(0.1, (threshold - mouseClientY) / threshold);
+          const speed = -Math.max(8, Math.round(factor * 36));
+          window.scrollBy(0, speed);
+        } else if (mouseClientY > h - threshold) {
+          // Dragging towards bottom -> scroll down
+          const factor = Math.max(0.1, (mouseClientY - (h - threshold)) / threshold);
+          const speed = Math.max(8, Math.round(factor * 36));
+          window.scrollBy(0, speed);
+        }
+      }
+      autoScrollRaf = requestAnimationFrame(doAutoScroll);
+    };
+
+    const onPointerMove = (e) => {
+      mouseClientY = e.clientY;
+    };
+
     this.sortableInstance = new Sortable(container, {
-      animation: 180,
-      handle: '.drag-handle',
+      animation: 160,
       ghostClass: 'sortable-ghost',
       chosenClass: 'sortable-chosen',
       dragClass: 'sortable-drag',
+      scroll: true,
+      scrollSensitivity: 160,
+      scrollSpeed: 30,
+      bubbleScroll: true,
+      forceAutoScrollFallback: true,
+
+      onStart: (evt) => {
+        isDragging = true;
+        mouseClientY = evt.originalEvent ? evt.originalEvent.clientY : null;
+        window.addEventListener('mousemove', onPointerMove, { passive: true });
+        window.addEventListener('pointermove', onPointerMove, { passive: true });
+        window.addEventListener('touchmove', (e) => {
+          if (e.touches && e.touches[0]) mouseClientY = e.touches[0].clientY;
+        }, { passive: true });
+        autoScrollRaf = requestAnimationFrame(doAutoScroll);
+      },
+
       onEnd: (evt) => {
+        isDragging = false;
+        mouseClientY = null;
+        window.removeEventListener('mousemove', onPointerMove);
+        window.removeEventListener('pointermove', onPointerMove);
+        if (autoScrollRaf) cancelAnimationFrame(autoScrollRaf);
+
         // Rearrange this.emojis based on DOM order
         const itemEls = container.querySelectorAll('[data-id]');
         const newOrderIds = Array.from(itemEls).map(el => el.getAttribute('data-id'));
