@@ -149,7 +149,7 @@ class EmojiSorterService extends EventEmitter {
         id: emoji.id,
         oldName,
         newName,
-        url: emoji.imageURL({ extension: emoji.animated ? 'gif' : 'webp', size: 96 }),
+        url: emoji.imageURL({ extension: emoji.animated ? 'gif' : 'webp', size: 64 }),
         animated: emoji.animated
       };
 
