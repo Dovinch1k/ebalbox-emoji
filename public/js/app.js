@@ -55,7 +55,7 @@ const app = {
   emojis: [],           // Working ordered list of emojis
   originalEmojis: [],   // Pristine copy from Discord
   activeTab: 'all',     // 'all' | 'static' | 'animated'
-  viewMode: 'list',     // 'list' | 'grid'
+  viewMode: 'cards',    // 'dense' (7TV mosaic) | 'cards' (7TV cards) | 'list'
   searchQuery: '',
   sortableInstance: null,
   progressUnsub: null,
@@ -322,17 +322,26 @@ const app = {
   setViewMode(mode) {
     this.viewMode = mode;
     const container = document.getElementById('emoji-container');
+    const btnDense = document.getElementById('view-mode-dense');
+    const btnCards = document.getElementById('view-mode-cards');
     const btnList = document.getElementById('view-mode-list');
-    const btnGrid = document.getElementById('view-mode-grid');
 
-    if (mode === 'list') {
-      container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 min-h-[200px]';
-      btnList.className = 'px-2.5 py-1 rounded-lg bg-discord-blurple text-white font-medium flex items-center gap-1 transition';
-      btnGrid.className = 'px-2.5 py-1 rounded-lg text-discord-muted hover:text-white font-medium flex items-center gap-1 transition';
+    const activeClass = 'px-2.5 py-1 rounded-lg bg-discord-blurple text-white font-medium flex items-center gap-1.5 transition shadow-sm';
+    const inactiveClass = 'px-2.5 py-1 rounded-lg text-discord-muted hover:text-white font-medium flex items-center gap-1.5 transition';
+
+    if (btnDense) btnDense.className = mode === 'dense' ? activeClass : inactiveClass;
+    if (btnCards) btnCards.className = mode === 'cards' ? activeClass : inactiveClass;
+    if (btnList) btnList.className = mode === 'list' ? activeClass : inactiveClass;
+
+    if (mode === 'dense') {
+      // 7TV Mode 1 (Screenshot 1): Ultra-compact icon-only mosaic
+      container.className = 'grid grid-cols-[repeat(auto-fill,minmax(54px,1fr))] sm:grid-cols-[repeat(auto-fill,minmax(60px,1fr))] gap-1.5 min-h-[200px]';
+    } else if (mode === 'cards') {
+      // 7TV Mode 2 (Screenshot 2): Emote cards with centered icon and names
+      container.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10 gap-2.5 min-h-[200px]';
     } else {
-      container.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2.5 min-h-[200px]';
-      btnGrid.className = 'px-2.5 py-1 rounded-lg bg-discord-blurple text-white font-medium flex items-center gap-1 transition';
-      btnList.className = 'px-2.5 py-1 rounded-lg text-discord-muted hover:text-white font-medium flex items-center gap-1 transition';
+      // Compact List
+      container.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 min-h-[200px]';
     }
 
     this.renderEmojiGrid();
@@ -352,8 +361,49 @@ const app = {
 
     emptyEl.classList.add('hidden');
 
-    if (this.viewMode === 'list') {
-      // Minimalist List Layout
+    if (this.viewMode === 'dense') {
+      // 7TV Mode 1 (Screenshot 1): Ultra-compact Dense Mosaic
+      container.innerHTML = filtered.map((emoji) => {
+        const overallIndex = this.emojis.findIndex(e => e.id === emoji.id) + 1;
+        const previewName = clientFormatEmojiName(emoji.name, overallIndex, this.config);
+
+        return `
+          <div data-id="${emoji.id}" title="#${overallIndex} :${previewName}: (было: :${emoji.name}:)" class="emoji-card emoji-tile-dense aspect-square bg-[#131416] hover:bg-[#1a1b1f] border border-[#202226] rounded-xl p-1.5 flex flex-col items-center justify-center relative group">
+            <span class="index-badge absolute top-1 left-1.5 text-[9px] font-mono text-discord-muted/60 group-hover:text-discord-muted pointer-events-none">#${overallIndex}</span>
+            ${emoji.animated ? '<span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-sky-400 shadow-sm shadow-sky-400 pointer-events-none"></span>' : ''}
+            <img src="${emoji.url}" alt="${emoji.name}" class="w-10 h-10 object-contain drop-shadow pointer-events-none">
+          </div>
+        `;
+      }).join('');
+    } else if (this.viewMode === 'cards') {
+      // 7TV Mode 2 (Screenshot 2): Emote Cards with centered icon, name underneath and zap badge
+      container.innerHTML = filtered.map((emoji) => {
+        const overallIndex = this.emojis.findIndex(e => e.id === emoji.id) + 1;
+        const previewName = clientFormatEmojiName(emoji.name, overallIndex, this.config);
+
+        return `
+          <div data-id="${emoji.id}" title="#${overallIndex} :${previewName}: (было: :${emoji.name}:)" class="emoji-card emoji-card-7tv aspect-[4/4.3] bg-[#141517] hover:bg-[#191a1e] border border-[#212328] rounded-2xl p-2.5 flex flex-col items-center justify-between text-center relative group">
+            <!-- Top Row: Index & Zap/GIF Icon -->
+            <div class="w-full flex items-center justify-between">
+              <span class="index-badge text-[10px] font-mono font-bold text-discord-muted/60 bg-discord-dark/50 px-1.5 py-0.5 rounded border border-discord-card/40">#${overallIndex}</span>
+              ${emoji.animated ? '<i data-lucide="zap" class="w-3.5 h-3.5 text-sky-400 fill-sky-400/20" title="GIF (Анимированный)"></i>' : '<span class="w-3.5 h-3.5"></span>'}
+            </div>
+
+            <!-- Center: Emoji Image -->
+            <div class="my-auto py-1 flex items-center justify-center">
+              <img src="${emoji.url}" alt="${emoji.name}" class="w-14 h-14 object-contain drop-shadow pointer-events-none">
+            </div>
+
+            <!-- Bottom Row: Emote Name (7TV Style) -->
+            <div class="w-full space-y-0.5">
+              <p class="new-name text-xs font-semibold text-white tracking-tight truncate block group-hover:text-discord-blurple transition" title="Новое: :${previewName}:">:${previewName}:</p>
+              <p class="text-[10px] font-mono text-discord-muted/60 truncate" title="Исходное: :${emoji.name}:">:${emoji.name}:</p>
+            </div>
+          </div>
+        `;
+      }).join('');
+    } else {
+      // Detailed List Layout
       container.innerHTML = filtered.map((emoji) => {
         const overallIndex = this.emojis.findIndex(e => e.id === emoji.id) + 1;
         const previewName = clientFormatEmojiName(emoji.name, overallIndex, this.config);
@@ -363,7 +413,7 @@ const app = {
             <div class="flex items-center gap-2.5 min-w-0">
               <i data-lucide="grip-vertical" class="drag-handle w-4 h-4 text-discord-muted/40 group-hover:text-discord-muted flex-shrink-0"></i>
               <span class="index-badge text-[11px] font-mono font-bold text-discord-muted bg-discord-dark px-1.5 py-0.5 rounded border border-discord-card flex-shrink-0">#${overallIndex}</span>
-              <img src="${emoji.url}" alt="${emoji.name}" class="w-7 h-7 object-contain flex-shrink-0 drop-shadow">
+              <img src="${emoji.url}" alt="${emoji.name}" class="w-7 h-7 object-contain flex-shrink-0 drop-shadow pointer-events-none">
               <div class="flex items-center gap-1.5 min-w-0 text-xs font-mono">
                 <span class="text-discord-muted/80 truncate max-w-[85px] sm:max-w-[120px]" title="Текущее: :${emoji.name}:">:${emoji.name}:</span>
                 <span class="text-discord-blurple/70 flex-shrink-0 text-[10px]">➔</span>
@@ -371,33 +421,7 @@ const app = {
               </div>
             </div>
             <div class="flex items-center gap-1 flex-shrink-0">
-              ${emoji.animated ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">GIF</span>' : ''}
-            </div>
-          </div>
-        `;
-      }).join('');
-    } else {
-      // Compact Grid Layout
-      container.innerHTML = filtered.map((emoji) => {
-        const overallIndex = this.emojis.findIndex(e => e.id === emoji.id) + 1;
-        const previewName = clientFormatEmojiName(emoji.name, overallIndex, this.config);
-
-        return `
-          <div data-id="${emoji.id}" class="emoji-card select-none bg-discord-secondary/70 border border-discord-card rounded-2xl p-2.5 flex flex-col items-center justify-between text-center relative group">
-            <div class="w-full flex items-center justify-between mb-1.5">
-              <span class="index-badge text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-discord-dark text-discord-muted border border-discord-card">#${overallIndex}</span>
-              <div class="flex items-center gap-1">
-                ${emoji.animated ? '<span class="text-[9px] font-bold px-1 py-0.5 rounded bg-amber-500/20 text-amber-400">GIF</span>' : ''}
-              </div>
-            </div>
-            <div class="w-12 h-12 flex items-center justify-center p-1 bg-discord-dark/50 rounded-xl mb-1.5">
-              <img src="${emoji.url}" alt="${emoji.name}" class="max-w-full max-h-full object-contain filter drop-shadow">
-            </div>
-            <div class="w-full space-y-0.5">
-              <p class="text-[10px] text-discord-muted truncate" title="Текущее: :${emoji.name}:">:${emoji.name}:</p>
-              <div class="preview-name-badge bg-discord-dark px-1 py-0.5 rounded border border-discord-card">
-                <span class="new-name text-[11px] font-mono font-bold text-emerald-400 block truncate" title="Новое: :${previewName}:">:${previewName}:</span>
-              </div>
+              ${emoji.animated ? '<span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-400">GIF</span>' : ''}
             </div>
           </div>
         `;
@@ -426,6 +450,8 @@ const app = {
         newNameEl.innerText = `:${previewName}:`;
         newNameEl.title = `Новое: :${previewName}:`;
       }
+
+      card.title = `#${overallIndex} :${previewName}: (было: :${emoji.name}:)`;
     });
   },
 

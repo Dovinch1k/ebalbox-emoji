@@ -1,4 +1,4 @@
-/* Custom Discord-like styling enhancements */
+/* Custom Discord & 7TV inspired styling */
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
@@ -21,41 +21,62 @@
 
 /* SortableJS drag & drop visual feedback */
 .sortable-ghost {
-  opacity: 0.25;
-  transform: scale(0.98);
+  opacity: 0.20;
+  transform: scale(0.95);
   border: 2px dashed #5865F2 !important;
-  background-color: rgba(88, 101, 242, 0.08) !important;
+  background-color: rgba(88, 101, 242, 0.12) !important;
 }
 
 .sortable-chosen {
   cursor: grabbing !important;
-  background-color: #35373c !important;
+  background-color: #27292e !important;
   border-color: #5865F2 !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 12px 30px -5px rgba(0, 0, 0, 0.7);
 }
 
 .sortable-drag {
   opacity: 0.95;
-  transform: scale(1.02);
+  transform: scale(1.05);
   z-index: 9999 !important;
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.8);
 }
 
-/* Minimalist Emoji card styling */
+/* Base Emoji Card styling */
 .emoji-card {
-  transition: transform 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
   user-select: none;
   cursor: grab;
-}
-
-.emoji-card:hover {
-  border-color: rgba(88, 101, 242, 0.45);
-  background-color: #313338;
+  position: relative;
 }
 
 .emoji-card:active {
   cursor: grabbing;
 }
 
+/* 7TV Dense Mosaic Tile */
+.emoji-tile-dense {
+  transition: transform 0.1s ease, border-color 0.1s ease, background-color 0.1s ease, box-shadow 0.1s ease;
+}
+
+.emoji-tile-dense:hover {
+  transform: scale(1.12);
+  z-index: 30;
+  border-color: #5865F2 !important;
+  background-color: #1e1f24 !important;
+  box-shadow: 0 8px 20px -2px rgba(0, 0, 0, 0.7);
+}
+
+/* 7TV Medium Card */
+.emoji-card-7tv {
+  transition: border-color 0.12s ease, background-color 0.12s ease, transform 0.12s ease;
+}
+
+.emoji-card-7tv:hover {
+  border-color: rgba(88, 101, 242, 0.55);
+  background-color: #1c1d22;
+  transform: translateY(-2px);
+}
+
+/* Drag Handles */
 .drag-handle {
   cursor: grab;
 }
