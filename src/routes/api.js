@@ -148,8 +148,8 @@ module.exports = function(botClient, sorterService) {
         name: e.name,
         cleanName: stripPrefix(e.name),
         animated: e.animated,
-        url: e.imageURL({ size: 64 }),
-        fullUrl: e.imageURL({ size: 128 }),
+        url: e.imageURL({ extension: e.animated ? 'gif' : 'webp', size: 96 }),
+        fullUrl: e.imageURL({ extension: e.animated ? 'gif' : 'webp', size: 128 }),
         managed: e.managed, // Twitch/external integration emojis
         available: e.available,
         createdAt: e.createdTimestamp
