@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Discord Emoji Sorter | Сортировка эмодзи с веб-интерфейсом</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            discord: {
+              blurple: '#5865F2',
+              'blurple-hover': '#4752C4',
+              green: '#23A55A',
+              'green-hover': '#1F934F',
+              yellow: '#F0B232',
+              red: '#F23F43',
+              dark: '#1e1f22',
+              darker: '#111214',
+              secondary: '#2b2d31',
+              card: '#313338',
+              hover: '#35373c',
+              text: '#dbdee1',
+              muted: '#949ba4'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- SortableJS -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="bg-discord-dark text-discord-text min-h-screen flex flex-col font-sans selection:bg-discord-blurple selection:text-white">
+
+  <!-- Navbar -->
+  <header class="bg-discord-darker border-b border-discord-secondary/60 sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="app.showGuildSelect()">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-discord-blurple to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-discord-blurple/20">
+          <i data-lucide="sparkles" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <span class="text-white font-bold text-lg tracking-wide flex items-center gap-2">
+            EmojiSorter
+            <span class="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full bg-discord-blurple/20 text-discord-blurple border border-discord-blurple/30">Bot</span>
+          </span>
+          <p class="text-xs text-discord-muted hidden sm:block">Форматирование 0001_имя для Discord</p>
+        </div>
+      </div>
+
+      <!-- Right Nav / User Profile -->
+      <div id="nav-user-container" class="flex items-center space-x-3">
+        <!-- Injected via JS: Login button or User Profile -->
+        <div class="animate-pulse bg-discord-secondary h-9 w-28 rounded-lg"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- VIEW 1: HERO / NOT AUTHENTICATED -->
+    <div id="view-hero" class="hidden flex flex-col items-center justify-center text-center py-16 px-4">
+      <div class="inline-flex p-4 rounded-3xl bg-discord-secondary/60 border border-discord-card mb-6 shadow-2xl">
+        <div class="flex items-center space-x-2 text-3xl">
+          <span>🐱</span>
+          <span class="text-discord-muted text-lg">➔</span>
+          <span class="font-mono text-sm bg-discord-darker text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-500/20">0001_cat</span>
+          <span>🚀</span>
+          <span class="text-discord-muted text-lg">➔</span>
+          <span class="font-mono text-sm bg-discord-darker text-emerald-400 px-3 py-1.5 rounded-lg border border-emerald-500/20">0002_rocket</span>
+        </div>
+      </div>
+
+      <h1 class="text-4xl sm:text-5xl font-extrabold text-white tracking-tight max-w-3xl leading-tight">
+        Управляйте и сортируйте эмодзи на сервере Discord
+      </h1>
+      <p class="mt-4 text-lg text-discord-muted max-w-2xl">
+        Discord всегда сортирует эмодзи в окне выбора по алфавиту. Наш бот переименовывает их в формате 
+        <span class="text-white font-mono bg-discord-secondary px-1.5 py-0.5 rounded">0001_имя</span>, гарантируя идеальный порядок отображения.
+      </p>
+
+      <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/auth/login" class="inline-flex items-center justify-center px-6 py-3.5 rounded-xl text-base font-semibold text-white bg-discord-blurple hover:bg-discord-blurple-hover shadow-lg shadow-discord-blurple/30 transition duration-150 gap-2">
+          <i data-lucide="log-in" class="w-5 h-5"></i>
+          Войти через Discord
+        </a>
+      </div>
+
+      <!-- Feature grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-16 text-left max-w-5xl w-full">
+        <div class="bg-discord-secondary/50 border border-discord-card/80 p-6 rounded-2xl hover:border-discord-blurple/50 transition">
+          <div class="w-12 h-12 rounded-xl bg-discord-blurple/10 text-discord-blurple flex items-center justify-center mb-4">
+            <i data-lucide="arrow-down-up" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-white font-bold text-lg mb-2">Drag & Drop сортировка</h3>
+          <p class="text-discord-muted text-sm">Перетаскивайте эмодзи мышкой прямо в браузере в нужном вам порядке с мгновенным предпросмотром.</p>
+        </div>
+
+        <div class="bg-discord-secondary/50 border border-discord-card/80 p-6 rounded-2xl hover:border-discord-blurple/50 transition">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-4">
+            <i data-lucide="shield-check" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-white font-bold text-lg mb-2">Защита от Rate Limit</h3>
+          <p class="text-discord-muted text-sm">Встроенная очередь с паузами между запросами к API Discord и автоматическим возобновлением при лимитах.</p>
+        </div>
+
+        <div class="bg-discord-secondary/50 border border-discord-card/80 p-6 rounded-2xl hover:border-discord-blurple/50 transition">
+          <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center mb-4">
+            <i data-lucide="eraser" class="w-6 h-6"></i>
+          </div>
+          <h3 class="text-white font-bold text-lg mb-2">Умная очистка префиксов</h3>
+          <p class="text-discord-muted text-sm">Автоматически удаляет старые номера вроде <span class="font-mono">0001_</span> перед назначением новых, предотвращая дублирование.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: SERVER SELECTION -->
+    <div id="view-guilds" class="hidden">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b border-discord-secondary gap-4">
+        <div>
+          <h2 class="text-2xl font-bold text-white flex items-center gap-2">
+            <i data-lucide="server" class="w-6 h-6 text-discord-blurple"></i>
+            Выберите сервер
+          </h2>
+          <p class="text-sm text-discord-muted mt-1">Отображаются только серверы, где у вас есть права на управление эмодзи</p>
+        </div>
+        <button onclick="app.refreshGuilds()" class="inline-flex items-center gap-2 px-4 py-2 bg-discord-secondary hover:bg-discord-card text-white text-sm font-medium rounded-lg transition">
+          <i data-lucide="rotate-cw" class="w-4 h-4" id="refresh-icon"></i>
+          Обновить список
+        </button>
+      </div>
+
+      <div id="guilds-loading" class="py-12 flex flex-col items-center justify-center">
+        <div class="w-10 h-10 border-4 border-discord-blurple border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-4 text-discord-muted text-sm">Загрузка серверов...</p>
+      </div>
+
+      <div id="guilds-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-6 hidden">
+        <!-- Injected via JS -->
+      </div>
+
+      <div id="guilds-empty" class="hidden py-16 text-center">
+        <div class="inline-flex p-4 rounded-full bg-discord-secondary text-discord-muted mb-4">
+          <i data-lucide="alert-circle" class="w-8 h-8"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white">Серверы не найдены</h3>
+        <p class="text-discord-muted text-sm max-w-md mx-auto mt-2">
+          Убедитесь, что у вас есть права «Управлять выражениями» (Manage Expressions) или «Администратор» на вашем Discord-сервере.
+        </p>
+      </div>
+    </div>
+
+    <!-- VIEW 3: EMOJI MANAGEMENT DASHBOARD -->
+    <div id="view-dashboard" class="hidden space-y-6">
+      
+      <!-- Server Banner & Stats -->
+      <div class="bg-discord-secondary/70 border border-discord-card p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div class="flex items-center gap-4">
+          <button onclick="app.showGuildSelect()" class="p-2.5 rounded-xl bg-discord-card hover:bg-discord-hover text-discord-muted hover:text-white transition" title="Вернуться к списку серверов">
+            <i data-lucide="arrow-left" class="w-5 h-5"></i>
+          </button>
+          <img id="dash-guild-icon" src="" alt="Guild Icon" class="w-14 h-14 rounded-2xl bg-discord-dark border border-discord-card object-cover shadow-md">
+          <div>
+            <h2 id="dash-guild-name" class="text-xl font-bold text-white flex items-center gap-2">Сервер</h2>
+            <div class="flex flex-wrap items-center gap-3 text-xs text-discord-muted mt-1">
+              <span id="stat-total" class="px-2 py-0.5 rounded bg-discord-dark font-medium text-white">Всего: 0</span>
+              <span id="stat-static" class="px-2 py-0.5 rounded bg-discord-dark">🖼 Статичные: 0</span>
+              <span id="stat-animated" class="px-2 py-0.5 rounded bg-discord-dark">🎬 Анимированные: 0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+          <button id="btn-open-confirm" onclick="app.openConfirmationModal()" class="w-full md:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white bg-discord-green hover:bg-discord-green-hover shadow-lg shadow-discord-green/20 transition transform active:scale-95">
+            <i data-lucide="rocket" class="w-5 h-5"></i>
+            Применить сортировку
+          </button>
+        </div>
+      </div>
+
+      <!-- Controls & Quick Sort Toolbar -->
+      <div class="bg-discord-secondary/50 border border-discord-card p-4 rounded-2xl space-y-4">
+        
+        <!-- Row 1: Search & Filter Tabs -->
+        <div class="flex flex-col sm:flex-row justify-between gap-4">
+          <!-- Search -->
+          <div class="relative flex-1 max-w-md">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-discord-muted"></i>
+            <input type="text" id="filter-search" oninput="app.onFilterChange()" placeholder="Поиск эмодзи по названию..." class="w-full bg-discord-dark border border-discord-card rounded-xl pl-10 pr-4 py-2 text-sm text-white placeholder-discord-muted focus:outline-none focus:border-discord-blurple transition">
+          </div>
+
+          <!-- Tabs: All / Static / Animated -->
+          <div class="inline-flex p-1 bg-discord-dark rounded-xl border border-discord-card text-xs font-semibold">
+            <button onclick="app.setTab('all')" id="tab-all" class="px-3.5 py-1.5 rounded-lg bg-discord-blurple text-white transition">Все</button>
+            <button onclick="app.setTab('static')" id="tab-static" class="px-3.5 py-1.5 rounded-lg text-discord-muted hover:text-white transition">Статичные</button>
+            <button onclick="app.setTab('animated')" id="tab-animated" class="px-3.5 py-1.5 rounded-lg text-discord-muted hover:text-white transition">Анимированные</button>
+          </div>
+        </div>
+
+        <!-- Row 2: Preset Sort Buttons & Naming Settings -->
+        <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-discord-card/60">
+          
+          <!-- Preset Sort Actions -->
+          <div class="flex flex-wrap items-center gap-2 text-xs">
+            <span class="text-discord-muted font-medium mr-1">Сортировка:</span>
+            <button onclick="app.sortAZ()" class="px-3 py-1.5 rounded-lg bg-discord-card hover:bg-discord-hover text-white transition flex items-center gap-1.5" title="По алфавиту А-Я">
+              <i data-lucide="arrow-down-a-z" class="w-3.5 h-3.5 text-discord-blurple"></i>
+              А ➔ Я
+            </button>
+            <button onclick="app.sortZA()" class="px-3 py-1.5 rounded-lg bg-discord-card hover:bg-discord-hover text-white transition flex items-center gap-1.5" title="По алфавиту Я-А">
+              <i data-lucide="arrow-up-z-a" class="w-3.5 h-3.5 text-discord-blurple"></i>
+              Я ➔ А
+            </button>
+            <button onclick="app.sortAnimatedFirst()" class="px-3 py-1.5 rounded-lg bg-discord-card hover:bg-discord-hover text-white transition flex items-center gap-1.5">
+              <i data-lucide="film" class="w-3.5 h-3.5 text-amber-400"></i>
+              Сначала GIF
+            </button>
+            <button onclick="app.sortStaticFirst()" class="px-3 py-1.5 rounded-lg bg-discord-card hover:bg-discord-hover text-white transition flex items-center gap-1.5">
+              <i data-lucide="image" class="w-3.5 h-3.5 text-sky-400"></i>
+              Сначала статика
+            </button>
+            <button onclick="app.sortShuffle()" class="px-3 py-1.5 rounded-lg bg-discord-card hover:bg-discord-hover text-white transition flex items-center gap-1.5" title="Случайный порядок">
+              <i data-lucide="shuffle" class="w-3.5 h-3.5 text-emerald-400"></i>
+              Перемешать
+            </button>
+            <button onclick="app.resetOrder()" class="px-3 py-1.5 rounded-lg bg-discord-card hover:bg-discord-hover text-discord-muted hover:text-white transition flex items-center gap-1.5" title="Сбросить к текущему в Discord">
+              <i data-lucide="undo" class="w-3.5 h-3.5"></i>
+              Сброс
+            </button>
+          </div>
+
+          <!-- Format Config (Digits, Separator, etc.) -->
+          <div class="flex items-center gap-3 text-xs bg-discord-dark px-3 py-1.5 rounded-xl border border-discord-card">
+            <div class="flex items-center gap-2">
+              <span class="text-discord-muted font-medium">Формат:</span>
+              <select id="cfg-digits" onchange="app.onConfigChange()" class="bg-discord-secondary border border-discord-card rounded px-2 py-0.5 text-white font-mono focus:outline-none">
+                <option value="4" selected>0001_ (4 цифры)</option>
+                <option value="3">001_ (3 цифры)</option>
+                <option value="2">01_ (2 цифры)</option>
+                <option value="5">00001_ (5 цифр)</option>
+              </select>
+            </div>
+            
+            <label class="flex items-center gap-1.5 cursor-pointer text-discord-muted hover:text-white select-none">
+              <input type="checkbox" id="cfg-strip" checked onchange="app.onConfigChange()" class="rounded bg-discord-secondary border-discord-card text-discord-blurple focus:ring-0">
+              <span>Очищать старый индекс</span>
+            </label>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Emoji Grid -->
+      <div id="emoji-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3 min-h-[200px]">
+        <!-- Emoji cards injected via JS -->
+      </div>
+
+      <!-- Empty state if search finds nothing -->
+      <div id="emoji-empty" class="hidden py-16 text-center">
+        <i data-lucide="frown" class="w-10 h-10 text-discord-muted mx-auto mb-3"></i>
+        <p class="text-discord-muted">Эмодзи по вашему запросу не найдены</p>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- CONFIRMATION MODAL -->
+  <div id="modal-confirm" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-discord-secondary border border-discord-card rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+      
+      <!-- Header -->
+      <div class="p-5 border-b border-discord-card flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-discord-blurple/20 text-discord-blurple flex items-center justify-center">
+            <i data-lucide="check-check" class="w-5 h-5"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white">Подтверждение переименования</h3>
+        </div>
+        <button onclick="app.closeConfirmationModal()" class="text-discord-muted hover:text-white transition">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Body / Summary -->
+      <div class="p-5 space-y-4 overflow-y-auto flex-1 text-sm">
+        
+        <div class="bg-discord-dark p-4 rounded-xl border border-discord-card flex flex-wrap gap-4 justify-between items-center">
+          <div>
+            <p class="text-discord-muted text-xs">Будет обработано:</p>
+            <p id="confirm-count-total" class="text-xl font-bold text-white">0 эмодзи</p>
+          </div>
+          <div>
+            <p class="text-discord-muted text-xs">Требуют переименования:</p>
+            <p id="confirm-count-change" class="text-xl font-bold text-emerald-400">0</p>
+          </div>
+          <div>
+            <p class="text-discord-muted text-xs">Без изменений (пропуск):</p>
+            <p id="confirm-count-unchanged" class="text-xl font-bold text-discord-muted">0</p>
+          </div>
+        </div>
+
+        <div class="bg-amber-500/10 border border-amber-500/20 text-amber-200/90 p-3.5 rounded-xl text-xs flex gap-3">
+          <i data-lucide="info" class="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5"></i>
+          <div>
+            <strong class="font-semibold text-amber-300">Внимание о лимитах Discord:</strong>
+            <p class="mt-0.5">
+              Для безопасности вашего сервера переименование выполняется с безопасной задержкой (~0.85 сек на эмодзи).
+              Примерное время выполнения: <span id="confirm-estimate" class="font-bold text-white">~30 сек</span>. Не закрывайте страницу.
+            </p>
+          </div>
+        </div>
+
+        <!-- Diff Preview Table -->
+        <div>
+          <h4 class="text-xs font-semibold uppercase text-discord-muted tracking-wider mb-2">Предпросмотр изменений (первые 10):</h4>
+          <div class="bg-discord-dark rounded-xl border border-discord-card overflow-hidden">
+            <div id="confirm-diff-list" class="divide-y divide-discord-card/50 max-h-52 overflow-y-auto font-mono text-xs">
+              <!-- Diff items injected via JS -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="p-5 border-t border-discord-card bg-discord-dark flex justify-end gap-3">
+        <button onclick="app.closeConfirmationModal()" class="px-5 py-2.5 rounded-xl text-sm font-semibold bg-discord-card hover:bg-discord-hover text-discord-muted hover:text-white transition">
+          Отмена
+        </button>
+        <button onclick="app.executeSort()" id="btn-start-sort" class="px-6 py-2.5 rounded-xl text-sm font-bold bg-discord-green hover:bg-discord-green-hover text-white shadow-lg shadow-discord-green/20 transition flex items-center gap-2">
+          <i data-lucide="play" class="w-4 h-4 fill-white"></i>
+          Начать сортировку
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- LIVE PROGRESS MODAL -->
+  <div id="modal-progress" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-discord-secondary border border-discord-card rounded-2xl max-w-xl w-full flex flex-col shadow-2xl overflow-hidden animate-in fade-in duration-200">
+      
+      <!-- Header -->
+      <div class="p-5 border-b border-discord-card flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div id="progress-spinner" class="w-6 h-6 border-3 border-discord-blurple border-t-transparent rounded-full animate-spin"></div>
+          <div>
+            <h3 id="progress-title" class="text-base font-bold text-white">Переименование эмодзи...</h3>
+            <p id="progress-subtitle" class="text-xs text-discord-muted">Синхронизация с сервером Discord</p>
+          </div>
+        </div>
+        <span id="progress-percent" class="text-sm font-bold font-mono text-discord-blurple bg-discord-blurple/10 px-2.5 py-1 rounded-lg">0%</span>
+      </div>
+
+      <!-- Body -->
+      <div class="p-5 space-y-4">
+        
+        <!-- Progress Bar -->
+        <div class="w-full bg-discord-dark rounded-full h-3 overflow-hidden border border-discord-card">
+          <div id="progress-bar-fill" class="bg-gradient-to-r from-discord-blurple to-emerald-400 h-full transition-all duration-300 rounded-full" style="width: 0%"></div>
+        </div>
+
+        <!-- Current processing card -->
+        <div id="progress-current-card" class="bg-discord-dark p-3.5 rounded-xl border border-discord-card flex items-center gap-3">
+          <img id="progress-current-img" src="" alt="Emoji" class="w-10 h-10 object-contain bg-discord-secondary rounded-lg p-1">
+          <div class="flex-1 min-w-0">
+            <p class="text-xs text-discord-muted">Обрабатывается:</p>
+            <div class="flex items-center gap-2 font-mono text-sm truncate">
+              <span id="progress-current-old" class="text-discord-muted truncate">old_name</span>
+              <span class="text-discord-blurple">➔</span>
+              <span id="progress-current-new" class="text-emerald-400 font-bold truncate">0001_new_name</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Log Console -->
+        <div>
+          <div class="flex justify-between items-center mb-1.5">
+            <span class="text-xs font-semibold text-discord-muted uppercase tracking-wider">Журнал операций:</span>
+            <span id="progress-counts" class="text-xs font-mono text-discord-muted">Успешно: 0 | Пропущено: 0</span>
+          </div>
+          <div id="progress-log-box" class="bg-discord-darker p-3 rounded-xl border border-discord-card h-40 overflow-y-auto font-mono text-[11px] space-y-1.5 scrollbar-thin">
+            <!-- Logs injected via JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="p-4 border-t border-discord-card bg-discord-dark flex justify-between items-center">
+        <button id="btn-abort" onclick="app.abortSort()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-discord-red/20 text-discord-red hover:bg-discord-red hover:text-white transition flex items-center gap-1.5">
+          <i data-lucide="octagon-x" class="w-4 h-4"></i>
+          Остановить
+        </button>
+
+        <button id="btn-progress-done" onclick="app.closeProgressModal()" class="hidden px-5 py-2 rounded-xl text-xs font-bold bg-discord-blurple hover:bg-discord-blurple-hover text-white transition flex items-center gap-1.5">
+          <i data-lucide="check" class="w-4 h-4"></i>
+          Готово
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- App Logic Scripts -->
+  <script src="/js/api.js"></script>
+  <script src="/js/app.js"></script>
+  <script>
+    // Initialize Lucide icons on load
+    document.addEventListener('DOMContentLoaded', () => {
+      lucide.createIcons();
+    });
+  </script>
+</body>
+</html>

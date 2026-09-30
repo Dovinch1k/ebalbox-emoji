@@ -1,0 +1,29 @@
+{
+  "name": "discord-emoji-sorter",
+  "version": "1.0.0",
+  "description": "Discord Bot with Web Dashboard for sorting and renaming guild emojis with prefix formatting (0001_name)",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js"
+  },
+  "keywords": [
+    "discord",
+    "discord-bot",
+    "emoji-sorter",
+    "emojis",
+    "render"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "discord.js": "^14.27.0",
+    "dotenv": "^18.0.4",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

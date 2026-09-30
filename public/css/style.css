@@ -1,0 +1,58 @@
+/* Custom Discord-like styling enhancements */
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111214;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2b2d31;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #35373c;
+}
+
+/* SortableJS drag & drop visual feedback */
+.sortable-ghost {
+  opacity: 0.35;
+  transform: scale(0.96);
+  border: 2px dashed #5865F2 !important;
+  background-color: rgba(88, 101, 242, 0.1) !important;
+}
+
+.sortable-chosen {
+  cursor: grabbing !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.6);
+  border-color: #5865F2 !important;
+}
+
+.sortable-drag {
+  opacity: 0.95;
+  transform: scale(1.05);
+}
+
+/* Emoji card styling */
+.emoji-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+}
+
+.emoji-card:hover {
+  border-color: rgba(88, 101, 242, 0.4);
+  transform: translateY(-2px);
+}
+
+.drag-handle {
+  cursor: grab;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
